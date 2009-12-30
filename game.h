@@ -15,6 +15,7 @@ enum TileType {
 
 class Tile : public QGraphicsWidget
 {
+    Q_OBJECT
 public:
     Tile(TileType tileType);
     TileType tileType() const { return d.tileType; }
@@ -22,6 +23,19 @@ public:
 private:
     struct Data {
         TileType tileType;
+    } d;
+};
+
+class Letter : public QGraphicsWidget
+{
+    Q_OBJECT
+public:
+    Letter(const QChar &ch);
+    QChar letter() const { return d.letter; }
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget * = 0);
+private:
+    struct Data {
+        QChar letter;
     } d;
 };
 
@@ -50,7 +64,7 @@ private:
     struct Data {
         Node *dictionary;
         QVector<Tile*> board;
-        QVector<QChar> letters;
+        QVector<Letter*> letters;
         QString bag;
         QHash<QChar, int> scoring;
         int rows, columns;

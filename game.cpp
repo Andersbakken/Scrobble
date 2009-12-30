@@ -119,6 +119,24 @@ void Game::initBoard(const QString &file)
         ++col;
     }
     d.board.resize(d.columns * d.rows);
+    d.letters.resize(d.columns * d.rows);
+    Letter *l;
+    d.letters[14] = (l = new Letter('A'));
+    addItem(l);
+    d.letters[15] = (l = new Letter('a'));
+    addItem(l);
+    d.letters[16] = (l = new Letter('r'));
+    addItem(l);
+    d.letters[17] = (l = new Letter('d'));
+    addItem(l);
+    d.letters[18] = (l = new Letter('v'));
+    addItem(l);
+    d.letters[19] = (l = new Letter('a'));
+    addItem(l);
+    d.letters[20] = (l = new Letter('r'));
+    addItem(l);
+    d.letters[21] = (l = new Letter('k'));
+    addItem(l);
 }
 
 void Game::onSceneRectChanged(const QRectF &sceneRect)
@@ -129,9 +147,13 @@ void Game::onSceneRectChanged(const QRectF &sceneRect)
         r.moveCenter(sceneRect.center());
         const QSizeF size(r.width() / d.columns, r.height() / d.rows);
         for (int i=0; i<d.board.size(); ++i) {
-            d.board.at(i)->setGeometry(QRectF(r.x() + ((i % d.columns) * size.width()),
-                                              r.y() + ((i / d.columns) * size.height()),
-                                              size.width(), size.height()));
+            const QRectF rect(r.x() + ((i % d.columns) * size.width()),
+                              r.y() + ((i / d.columns) * size.height()),
+                              size.width(), size.height());
+            d.board.at(i)->setGeometry(rect);
+            if (d.letters.at(i)) {
+                d.letters.at(i)->setGeometry(rect);
+            }
         }
     }
 
@@ -150,13 +172,13 @@ void Tile::paint(QPainter *realPainter, const QStyleOptionGraphicsItem *option, 
     if (r.width() < 1 || r.height() < 1)
         return;
 
-    if (d.tileType == Normal) {
-        static QPixmap bg("wood.png");
-        Q_ASSERT(!bg.isNull());
-        realPainter->setBrushOrigin(-pos());
-        realPainter->fillRect(r, bg);
-        return;
-    }
+//     if (d.tileType == Normal) {
+//         static QPixmap bg("wood.png");
+//         Q_ASSERT(!bg.isNull());
+//         realPainter->setBrushOrigin(-pos());
+//         realPainter->fillRect(r, bg);
+//         return;
+//     }
 
     if (cache[d.tileType].size() != r.size()) {
         QPixmap &pixmap = cache[d.tileType];
@@ -254,4 +276,23 @@ bool Game::isWord(const QString &word) const
         node = node->children[ch - 'a'];
     }
     return node && node->word;
+}
+
+Letter::Letter(const QChar &ch)
+{
+    setZValue(10);
+    d.letter = ch;
+}
+
+void Letter::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget * )
+{
+    static QPixmap bg("wood.png");
+    Q_ASSERT(!bg.isNull());
+    painter->setBrushOrigin(-d.letter.toLatin1(), -d.letter.toLatin1());
+    painter->fillRect(option->rect, bg);
+    QFont font;
+    font.setPixelSize(option->rect.height() * .9);
+    painter->setFont(font);
+    painter->setPen(Qt::black);
+    painter->drawText(option->rect, Qt::AlignCenter, d.letter);
 }
