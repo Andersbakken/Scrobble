@@ -173,7 +173,7 @@ void Tile::paint(QPainter *realPainter, const QStyleOptionGraphicsItem *option, 
         return;
 
 //     if (d.tileType == Normal) {
-//         static QPixmap bg("wood.png");
+//         static QPixmap bg(":/wood.png");
 //         Q_ASSERT(!bg.isNull());
 //         realPainter->setBrushOrigin(-pos());
 //         realPainter->fillRect(r, bg);
@@ -286,7 +286,7 @@ Letter::Letter(const QChar &ch)
 
 void Letter::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget * )
 {
-    static QPixmap bg("wood.png");
+    static QPixmap bg(":/wood.png");
     Q_ASSERT(!bg.isNull());
     painter->setBrushOrigin(-d.letter.toLatin1(), -d.letter.toLatin1());
     painter->fillRect(option->rect, bg);

@@ -2,5 +2,6 @@
 <qresource>
     <file>board.txt</file>
     <file>dict</file>
+    <file>wood.png</file>
 </qresource>
 </RCC>
