@@ -1,5 +1,6 @@
 <!DOCTYPE RCC><RCC version="1.0">
 <qresource>
     <file>board.txt</file>
+    <file>dict</file>
 </qresource>
 </RCC>

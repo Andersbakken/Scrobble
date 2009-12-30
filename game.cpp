@@ -3,6 +3,7 @@
 Game::Game(QObject *parent)
     : QGraphicsScene(parent)
 {
+    d.dictionary = 0;
     connect(this, SIGNAL(sceneRectChanged(QRectF)), this, SLOT(onSceneRectChanged(QRectF)));
     setBackgroundBrush(Qt::white);
     d.rows = -1;
@@ -28,6 +29,7 @@ Game::Game(QObject *parent)
         }
     }
     initBoard(":/board.txt");
+    initDictionary(":/dict");
 }
 
 Game::~Game()
@@ -184,4 +186,67 @@ void Tile::paint(QPainter *realPainter, const QStyleOptionGraphicsItem *option, 
     }
     Q_ASSERT(cache[d.tileType].size() == r.size());
     realPainter->drawPixmap(r, cache[d.tileType]);
+}
+
+int Game::score(int x, int y, Qt::Orientation orientation, const QString &word) const
+{
+
+}
+
+int count = 1;
+static void findOrCreate(Node *node, const QString &word, int index)
+{
+    Q_ASSERT(node);
+    while (index < word.size() && !word.at(index).isLetter()) // '
+        ++index;
+    if (index == word.size()) {
+        node->word = true;
+    } else {
+        const int idx = word.at(index).toLower().toLatin1() - 'a';
+        if (!node->children[idx]) {
+            node->children[idx] = new Node;
+            ++count;
+        }
+        findOrCreate(node->children[idx], word, index + 1);
+    }
+}
+
+void dump(Node *node, int indent = 0)
+{
+    for (int i=0; i<26; ++i) {
+        if (node->children[i]) {
+            printf("%s%c\n", QByteArray().fill(' ', indent).constData(), 'a' + i);
+            dump(node->children[i], indent + 2);
+        }
+    }
+}
+
+void Game::initDictionary(const QString &file)
+{
+    delete d.dictionary;
+    d.dictionary = new Node;
+    QFile f(file);
+    f.open(QIODevice::ReadOnly);
+    Q_ASSERT(f.isReadable());
+    QTextStream ts(&f);
+    QString word;
+    int i = 0;
+    while (!ts.atEnd()) {
+        ts >> word;
+        findOrCreate(d.dictionary, word, 0);
+        ++i;
+    }
+    qDebug() << i << count;
+//    dump(d.dictionary);
+}
+
+bool Game::isWord(const QString &word) const
+{
+    Node *node = d.dictionary;
+    int idx = 0;
+    while (node && idx < word.size()) {
+        const char ch = word.at(idx++).toLower().toLatin1();
+        node = node->children[ch - 'a'];
+    }
+    return node && node->word;
 }
