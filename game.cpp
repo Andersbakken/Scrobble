@@ -145,10 +145,18 @@ Tile::Tile(TileType tileType)
 void Tile::paint(QPainter *realPainter, const QStyleOptionGraphicsItem *option, QWidget *)
 {
     static QPixmap cache[NumTypes];
-    enum { Margin = 4 };
+    enum { Margin = 2 };
     const QRect r = option->rect.adjusted(Margin, Margin, -Margin, -Margin);
     if (r.width() < 1 || r.height() < 1)
         return;
+
+    if (d.tileType == Normal) {
+        static QPixmap bg("wood.png");
+        Q_ASSERT(!bg.isNull());
+        realPainter->setBrushOrigin(-pos());
+        realPainter->fillRect(r, bg);
+        return;
+    }
 
     if (cache[d.tileType].size() != r.size()) {
         QPixmap &pixmap = cache[d.tileType];
@@ -211,7 +219,7 @@ static void findOrCreate(Node *node, const QString &word, int index)
     }
 }
 
-void dump(Node *node, int indent = 0)
+static inline void dump(Node *node, int indent = 0)
 {
     for (int i=0; i<26; ++i) {
         if (node->children[i]) {
@@ -230,13 +238,10 @@ void Game::initDictionary(const QString &file)
     Q_ASSERT(f.isReadable());
     QTextStream ts(&f);
     QString word;
-    int i = 0;
     while (!ts.atEnd()) {
         ts >> word;
         findOrCreate(d.dictionary, word, 0);
-        ++i;
     }
-    qDebug() << i << count;
 //    dump(d.dictionary);
 }
 

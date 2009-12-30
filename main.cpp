@@ -19,6 +19,18 @@ public:
         }
         QGraphicsView::resizeEvent(e);
     }
+    void showEvent(QShowEvent *e)
+    {
+        restoreGeometry(QSettings().value("geometry").toByteArray());
+        QGraphicsView::showEvent(e);
+    }
+
+    void closeEvent(QCloseEvent *e)
+    {
+        QSettings().setValue("geometry", saveGeometry());
+        QGraphicsView::closeEvent(e);
+    }
+
 };
 
 #include "main.moc"
@@ -26,6 +38,9 @@ public:
 int main(int argc, char **argv)
 {
     QApplication a(argc, argv);
+    a.setOrganizationName("AndersSoft");
+    a.setOrganizationDomain("www.AndersSoft.com");
+    a.setApplicationName("Scrobble");
     GraphicsView view;
     Game game;
     view.setScene(&game);
