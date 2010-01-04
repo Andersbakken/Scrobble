@@ -72,6 +72,7 @@ QString Game::defaultBag()
         { '\0', -1 }
     };
     QString bag;
+    bag.reserve(100);
     for (int i=0; letters[i].count > 0; ++i) {
         for (int j=0; j<letters[i].count; ++j) {
             bag.insert(rand() % bag.size(), letters[i].letter);
@@ -226,14 +227,6 @@ void Tile::paint(QPainter *realPainter, const QStyleOptionGraphicsItem *option, 
 
 int Game::score(int x, int y, Qt::Orientation orientation, const QString &word) const
 {
-
-    for (int i=0; i<word.size(); ++i) {
-        QChar l = letter(x + orientation == Qt::Horizontal ? 1 : 0,
-                         y + orientation == Qt::Vertical ? 1 : 0);
-        if (!l.isNull())
-            return -1;
-    }
-
     QVector<QChar> letters(d.letters.size());
     for (int i=0; i<letters.size(); ++i) {
         if (const Letter *letter = d.letters.at(i)) {
@@ -244,10 +237,13 @@ int Game::score(int x, int y, Qt::Orientation orientation, const QString &word) 
     int xx = x;
     const int yadd = (orientation == Qt::Vertical ? 1 : 0);
     const int xadd = (orientation == Qt::Horizontal ? 1 : 0);
+    bool connected = false;
     for (int i=0; i<word.size(); ++i) {
         const int idx = (yy * d.columns) + xx;
         xx += xadd;
         yy += yadd;
+        if (orientation == Qt::Vertical) {
+        }
         Q_ASSERT(idx >= 0 && idx < letters.size());
         QChar &ref = letters[idx];
         if (!ref.isNull())
@@ -256,19 +252,19 @@ int Game::score(int x, int y, Qt::Orientation orientation, const QString &word) 
     }
 }
 
-int count = 1;
+//int count = 1;
 static void findOrCreate(Node *node, const QString &word, int index)
 {
     Q_ASSERT(node);
-    while (index < word.size() && !word.at(index).isLetter()) // '
-        ++index;
     if (index == word.size()) {
         node->word = true;
     } else {
-        const int idx = word.at(index).toLower().toLatin1() - 'a';
+        Q_ASSERT(word.at(index).isLower());
+        Q_ASSERT(word.at(index).isLetter());
+        const int idx = word.at(index).toLatin1() - 'a';
         if (!node->children[idx]) {
             node->children[idx] = new Node;
-            ++count;
+//            ++count;
         }
         findOrCreate(node->children[idx], word, index + 1);
     }
@@ -297,7 +293,6 @@ void Game::initDictionary(const QString &file)
         ts >> word;
         findOrCreate(d.dictionary, word, 0);
     }
-//    dump(d.dictionary);
 }
 
 bool Game::isWord(const QString &word) const
@@ -319,7 +314,7 @@ Letter::Letter(const QChar &ch)
 
 void Letter::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget * )
 {
-    static QPixmap bg(":/wood.png");
+    static const QPixmap bg(":/wood.png");
     Q_ASSERT(!bg.isNull());
     painter->setBrushOrigin(-d.letter.toLatin1(), -d.letter.toLatin1());
     painter->fillRect(option->rect, bg);
@@ -332,6 +327,8 @@ void Letter::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QW
 
 QChar Game::letter(int x, int y) const
 {
+    if (x < 0 || x >= d.columns || y < 0 || y >= d.rows)
+        return QChar();
     const Letter *letter = d.letters.value((y * d.columns) + x);
     return letter ? letter->letter() : QChar();
 }
@@ -371,4 +368,24 @@ int Game::scoreWord(int x, int y, Qt::Orientation orientation, const QVector<QCh
         score += letterScore;
     }
     return score * wordMultiplier;
+}
+
+QStringList Game::findWords(int x, int y, Qt::Orientation orientation, const QString &word) const
+{
+    QChar adjacent[4];
+    for (int i=0; i<word.size(); ++i) {
+//        findAdjacentLetters(x, y);
+        for (int j=0; j<4; ++j) {
+        }
+
+    }
+
+}
+
+void Game::findAdjacentLetters(int x, int y, QChar *letters) const
+{
+    letters[0] = letter(x - 1, y);
+    letters[1] = letter(x + 1, y);
+    letters[2] = letter(x, y - 1);
+    letters[3] = letter(x, y + 1);
 }

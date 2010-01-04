@@ -59,6 +59,8 @@ public:
     bool isWord(const QString &word) const;
     QChar letter(int x, int y) const;
     int scoreWord(int x, int y, Qt::Orientation orientation, const QVector<QChar> &letters) const;
+    QStringList findWords(int x, int y, Qt::Orientation orientation, const QString &word) const;
+    void findAdjacentLetters(int x, int y, QChar *letters) const;
 public slots:
     void onSceneRectChanged(const QRectF &sceneRect);
 private:
