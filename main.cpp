@@ -8,6 +8,7 @@ public:
     GraphicsView(QWidget *parent = 0)
         : QGraphicsView(parent)
     {
+        setBackgroundBrush(QPixmap(":/wood.jpg"));
         setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     }

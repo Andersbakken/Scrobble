@@ -167,7 +167,7 @@ Tile::Tile(TileType tileType)
 void Tile::paint(QPainter *realPainter, const QStyleOptionGraphicsItem *option, QWidget *)
 {
     static QPixmap cache[NumTypes];
-    enum { Margin = 2 };
+    enum { Margin = 0 };
     const QRect r = option->rect.adjusted(Margin, Margin, -Margin, -Margin);
     if (r.width() < 1 || r.height() < 1)
         return;
@@ -184,7 +184,7 @@ void Tile::paint(QPainter *realPainter, const QStyleOptionGraphicsItem *option, 
         QPixmap &pixmap = cache[d.tileType];
         pixmap = QPixmap(r.size());
         static const QColor brushes[] = {
-            QColor("brown"), QColor("lightblue"), QColor(Qt::blue),
+            QColor(Qt::transparent), QColor("lightblue"), QColor(Qt::blue),
             QColor("orange"), QColor(Qt::red), QColor("orange")
         };
         pixmap.fill(brushes[d.tileType]);
@@ -194,6 +194,10 @@ void Tile::paint(QPainter *realPainter, const QStyleOptionGraphicsItem *option, 
             QLatin1String("Triple\nLetter\nScore"), QLatin1String("Double\nWord\nScore"),
             QLatin1String("Triple\nWord\nScore"), QString()
         };
+        if (brushes[d.tileType] == Qt::transparent) {
+            painter.setPen(Qt::black);
+            painter.drawRect(pixmap.rect().adjusted(0, 0, -1, -1));
+        }
         if (!text[d.tileType].isEmpty()) {
             painter.setPen(Qt::black);
             int pixelSize = option->rect.height() / 5;
