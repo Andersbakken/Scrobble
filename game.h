@@ -20,8 +20,10 @@ public:
     Tile(TileType tileType);
     TileType tileType() const { return d.tileType; }
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget * = 0);
+    bool isUsed() const { return d.used; }
 private:
     struct Data {
+        bool used;
         TileType tileType;
     } d;
 };
@@ -55,6 +57,8 @@ public:
     static QString defaultBag();
     int score(int x, int y, Qt::Orientation orientation, const QString &word) const;
     bool isWord(const QString &word) const;
+    QChar letter(int x, int y) const;
+    int scoreWord(int x, int y, Qt::Orientation orientation, const QVector<QChar> &letters) const;
 public slots:
     void onSceneRectChanged(const QRectF &sceneRect);
 private:

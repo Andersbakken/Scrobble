@@ -10,16 +10,16 @@ Game::Game(QObject *parent)
     d.columns = -1;
 
     static const char *scoring[] = {
-        "AEILNORSTU", // 1
-        "DG", // 2
-        "BCMP", // 3
-        "FHVWY", // 4
-        "K", // 5
+        "aeilnorstu", // 1
+        "dg", // 2
+        "bcmp", // 3
+        "fhvwy", // 4
+        "k", // 5
         "", // 6
         "", // 7
-        "JX", // 8
+        "jx", // 8
         "", // 9
-        "QZ", // 10
+        "qz", // 10
         0
     };
     for (int i=0; scoring[i]; ++i) {
@@ -42,32 +42,32 @@ QString Game::defaultBag()
         const char letter;
         const int count;
     } static const letters[] = {
-        { 'A', 9 },
-        { 'B', 2 },
-        { 'C', 2 },
-        { 'D', 4 },
-        { 'E', 12 },
-        { 'F', 2 },
-        { 'G', 3 },
-        { 'H', 2 },
-        { 'I', 9 },
-        { 'J', 1 },
-        { 'K', 1 },
-        { 'L', 4 },
-        { 'M', 2 },
-        { 'N', 6 },
-        { 'O', 8 },
-        { 'P', 2 },
-        { 'Q', 1 },
-        { 'R', 6 },
-        { 'S', 4 },
-        { 'T', 6 },
-        { 'U', 4 },
-        { 'V', 2 },
-        { 'W', 2 },
-        { 'X', 1 },
-        { 'Y', 2 },
-        { 'Z', 1 },
+        { 'a', 9 },
+        { 'b', 2 },
+        { 'c', 2 },
+        { 'd', 4 },
+        { 'e', 12 },
+        { 'f', 2 },
+        { 'g', 3 },
+        { 'h', 2 },
+        { 'i', 9 },
+        { 'j', 1 },
+        { 'k', 1 },
+        { 'l', 4 },
+        { 'm', 2 },
+        { 'n', 6 },
+        { 'o', 8 },
+        { 'p', 2 },
+        { 'q', 1 },
+        { 'r', 6 },
+        { 's', 4 },
+        { 't', 6 },
+        { 'u', 4 },
+        { 'v', 2 },
+        { 'w', 2 },
+        { 'x', 1 },
+        { 'y', 2 },
+        { 'z', 1 },
         { ' ', 2 },
         { '\0', -1 }
     };
@@ -162,8 +162,10 @@ void Game::onSceneRectChanged(const QRectF &sceneRect)
 
 Tile::Tile(TileType tileType)
 {
+    d.used = false;
     d.tileType = tileType;
 }
+
 void Tile::paint(QPainter *realPainter, const QStyleOptionGraphicsItem *option, QWidget *)
 {
     static QPixmap cache[NumTypes];
@@ -208,7 +210,7 @@ void Tile::paint(QPainter *realPainter, const QStyleOptionGraphicsItem *option, 
                     break;
                 --pixelSize;
             }
-            qDebug() << pixelSize;
+//            qDebug() << pixelSize;
             painter.setFont(font);
             painter.drawText(pixmap.rect(), Qt::AlignCenter, text[d.tileType]);
         }
@@ -225,6 +227,33 @@ void Tile::paint(QPainter *realPainter, const QStyleOptionGraphicsItem *option, 
 int Game::score(int x, int y, Qt::Orientation orientation, const QString &word) const
 {
 
+    for (int i=0; i<word.size(); ++i) {
+        QChar l = letter(x + orientation == Qt::Horizontal ? 1 : 0,
+                         y + orientation == Qt::Vertical ? 1 : 0);
+        if (!l.isNull())
+            return -1;
+    }
+
+    QVector<QChar> letters(d.letters.size());
+    for (int i=0; i<letters.size(); ++i) {
+        if (const Letter *letter = d.letters.at(i)) {
+            letters[i] = letter->letter();
+        }
+    }
+    int yy = y;
+    int xx = x;
+    const int yadd = (orientation == Qt::Vertical ? 1 : 0);
+    const int xadd = (orientation == Qt::Horizontal ? 1 : 0);
+    for (int i=0; i<word.size(); ++i) {
+        const int idx = (yy * d.columns) + xx;
+        xx += xadd;
+        yy += yadd;
+        Q_ASSERT(idx >= 0 && idx < letters.size());
+        QChar &ref = letters[idx];
+        if (!ref.isNull())
+            return -1;
+        ref = word.at(i);
+    }
 }
 
 int count = 1;
@@ -298,5 +327,48 @@ void Letter::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QW
     font.setPixelSize(option->rect.height() * .9);
     painter->setFont(font);
     painter->setPen(Qt::black);
-    painter->drawText(option->rect, Qt::AlignCenter, d.letter);
+    painter->drawText(option->rect, Qt::AlignCenter, d.letter.toUpper());
+}
+
+QChar Game::letter(int x, int y) const
+{
+    const Letter *letter = d.letters.value((y * d.columns) + x);
+    return letter ? letter->letter() : QChar();
+}
+
+int Game::scoreWord(int x, int y, Qt::Orientation orientation, const QVector<QChar> &letters) const // what to do about blanks?
+{ // blanks are upper case
+    int xx = x;
+    const int xadd = (orientation == Qt::Horizontal ? 1 : 0);
+    int yy = y;
+    const int yadd = (orientation == Qt::Vertical ? 1 : 0);
+    int wordMultiplier = 1;
+    int score = 0;
+    Node *node = d.dictionary;
+    while (xx < d.columns && yy < d.rows) {
+        const int idx = (yy * d.columns) + xx;
+        const QChar &letter = letters.at(idx);
+        if (letter.isNull())
+            break;
+        node = node->children[letter.toLower().toLatin1() - 'a'];
+        if (!node)
+            return -1;
+        xx += xadd;
+        yy += yadd;
+        Tile *tile = d.board.at(idx);
+        int letterScore = letter.isUpper() ? 0 : d.scoring.value(letters.at(idx));
+        if (!tile->isUsed()) {
+            switch (tile->tileType()) {
+            case Normal: break;
+            case DoubleLetter: letterScore *= 2; break;
+            case TripleLetter: letterScore *= 3; break;
+            case Center:
+            case DoubleWord: wordMultiplier *= 2; break;
+            case TripleWord: wordMultiplier *= 3; break;
+            case NumTypes: Q_ASSERT(0); break;
+            }
+        }
+        score += letterScore;
+    }
+    return score * wordMultiplier;
 }
